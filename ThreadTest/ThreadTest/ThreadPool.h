@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <vector>
 #include <mutex>
+#include "ThreadPoolLogger.h"
 
 class TaskWrapper
 {
@@ -32,8 +33,10 @@ private:
 	CONDITION_VARIABLE conditionvariable;
 	CRITICAL_SECTION criticalsection;
 
-	HANDLE* threadArray;
+	//HANDLE* threadArray;
 	std::vector<TaskWrapper*> wrappers;
+	std::vector<HANDLE> threads;
 	
+	ThreadPoolLogger *logger;
 };
 

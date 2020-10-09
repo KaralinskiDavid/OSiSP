@@ -140,10 +140,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="ThreadPoolLogger.cpp" />
     <ClCompile Include="ThreadTest.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LogMessages.h" />
     <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="ThreadPoolLogger.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

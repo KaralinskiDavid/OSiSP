@@ -4,7 +4,7 @@
 #include <iostream>
 #include <Windows.h>
 #include <stdio.h>
-#include <tchar.h>
+#include <string>
 #include "ThreadPool.h"
 
 typedef DWORD WINAPI Func(LPVOID lpParam);
@@ -12,42 +12,18 @@ typedef DWORD WINAPI Func(LPVOID lpParam);
 
 DWORD WINAPI MyFunc(LPVOID lpParam)
 {
-    std::cout << GetCurrentThreadId() << "\n";
+    std::string str = std::to_string(GetCurrentThreadId()) + "\n";
+    std::cout << str << std::flush;
     return 0;
 }
 
 int main()
 {
-
-
-    /*DWORD (_stdcall *b)(LPVOID lpParam) = MyFunc;
-    LPTHREAD_START_ROUTINE t;
-    t = &MyFunc;
-    HANDLE thread = CreateThread(NULL, 0, b, NULL, CREATE_SUSPENDED, NULL);*/
-
-
-    /*TP_CALLBACK_ENVIRON environment;
-    PTP_WORK_CALLBACK workcallback = MyFunc;
-    PTP_WORK work;
-    PTP_POOL threadPool = CreateThreadpool(NULL);
-    SetThreadpoolThreadMaximum(threadPool, 5);
-    InitializeThreadpoolEnvironment(&environment);
-    work = CreateThreadpoolWork(MyFunc, NULL, &environment);
-    SubmitThreadpoolWork(work);
-    CloseThreadpool(threadPool);
-    std::cout << "Hello World!\n";*/
-    //HANDLE thread = CreateThread(NULL, 0, &MyFunc, NULL, 0, NULL);
-
-
-    /*_tprintf(_T("Hello guysSSSSS"));
-    ResumeThread(thread);
-    WaitForSingleObject(thread, INFINITE);*/
-
-    /*ThreadPool threadPool;
-    threadPool.ExecuteTask(MyFunc);*/
     ThreadPool* threadPool = new ThreadPool(3);
-    threadPool->ExecuteTask(MyFunc);
-    threadPool->~ThreadPool();
+    for (int i = 0; i < 5; i++)
+    {
+        threadPool->ExecuteTask(MyFunc);
+    }
 }
 
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
