@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <vector>
+#include <mutex>
 
 class TaskWrapper
 {
@@ -13,21 +14,26 @@ public:
 
 class ThreadPool {
 public:
-	ThreadPool(int threadCount = 5);
+	ThreadPool(int maxThreadCount = 3);
 	~ThreadPool();
-	int ExecuteTask(LPTHREAD_START_ROUTINE Task);
+	int ExecuteTask(LPTHREAD_START_ROUTINE Func);
 private:
-	DWORD WINAPI TaskExtractor(LPVOID lpParam);
-	CRITICAL_SECTION criticalSection;
-	CONDITION_VARIABLE conditionVariable;
+	int _maxThreadCount;
+	int currentThreadCount = 0;
+
+	bool canExecute = true;
+	bool hasMaxCount = false;
+
+	HANDLE ThreadManager;
+	//static DWORD WINAPI ManageThreads(LPVOID lpParam);
+	static DWORD WINAPI ThreadStart(LPVOID lpParam);
+	int ExecutionWrapper();
+	bool ExecuteTaskFromVector();
+	CONDITION_VARIABLE conditionvariable;
+	CRITICAL_SECTION criticalsection;
 
 	HANDLE* threadArray;
 	std::vector<TaskWrapper*> wrappers;
-
-	int _maxThreadCount;
-	int _currentThreadCount;
-	bool _hasTasks;
-	bool _canExecute;
 	
 };
 

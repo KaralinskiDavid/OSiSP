@@ -12,12 +12,14 @@ typedef DWORD WINAPI Func(LPVOID lpParam);
 
 DWORD WINAPI MyFunc(LPVOID lpParam)
 {
-    _tprintf(_T("Hello guys"));
+    std::cout << GetCurrentThreadId() << "\n";
     return 0;
 }
 
 int main()
 {
+
+
     /*DWORD (_stdcall *b)(LPVOID lpParam) = MyFunc;
     LPTHREAD_START_ROUTINE t;
     t = &MyFunc;
@@ -41,9 +43,11 @@ int main()
     ResumeThread(thread);
     WaitForSingleObject(thread, INFINITE);*/
 
-    ThreadPool threadPool;
-    threadPool.ExecuteTask(MyFunc);
-
+    /*ThreadPool threadPool;
+    threadPool.ExecuteTask(MyFunc);*/
+    ThreadPool* threadPool = new ThreadPool(3);
+    threadPool->ExecuteTask(MyFunc);
+    threadPool->~ThreadPool();
 }
 
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
