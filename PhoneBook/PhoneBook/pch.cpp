@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <locale>
 
 #include "PhoneBookLine.h"
 
@@ -26,10 +27,11 @@ public:
 template<typename K, typename D>
 Node<K,D>* Node<K, D>::newNode(K key, D* data, Node* parent)
 {
-	Node* tmp = (Node*)malloc(sizeof(Node));
+	Node* tmp = new Node<K,D>();
 	tmp->left = tmp->right = NULL;
 	tmp->parent = parent;
 	tmp->key = key;
+	tmp->data = (D*)malloc(sizeof(D));
 	tmp->data = data;
 	return tmp;
 }
@@ -139,6 +141,8 @@ extern __declspec(dllexport) vector<PhoneBookLine*> loadPhonebook(wstring path)
 	wstring delimiter = wstring(L" ");
 	PhoneBookLine* phonebookElement;
 	vector<PhoneBookLine*> phonebook;
+
+	setlocale(LC_ALL, "C");
 
 	if (in.is_open())
 	{
