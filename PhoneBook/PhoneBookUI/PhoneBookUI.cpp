@@ -46,6 +46,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+    setlocale(LC_ALL, "RU");
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -254,7 +255,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         hWndListView = CreateListView(hWnd);
         CreateColumns(hWndListView);
-        PhoneBook = loadDatabase(L"D:\\Work\\PhoneBook\\Debug\\T2.txt");
+        PhoneBook = loadDatabase(L"..\\T2.txt");
         FillListView(hWndListView, PhoneBook);
         ShowWindow(hWndListView, SW_SHOWDEFAULT);
         CreateComboBox(hWnd);

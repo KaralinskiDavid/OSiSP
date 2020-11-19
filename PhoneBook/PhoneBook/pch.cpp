@@ -145,8 +145,6 @@ extern _declspec(dllexport) vector<PhoneBookLine*> loadPhonebook(wstring path)
 	PhoneBookLine* phonebookElement;
 	vector<PhoneBookLine*> phonebook;
 
-	setlocale(LC_ALL, "C");
-
 	if (in.is_open())
 	{
 		while (getline(in, line))
