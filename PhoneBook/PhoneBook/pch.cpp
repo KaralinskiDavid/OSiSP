@@ -7,6 +7,7 @@
 
 #include "PhoneBookLine.h"
 
+
 using namespace std;
 
 template<typename K, typename D>
@@ -21,8 +22,9 @@ public:
 	Node* parent;
 	Node* newNode(K key, D* data, Node* parent);
 	void insert(Node** head, K key, D* data);
-	vector<Node*> getNodesByKey(Node* root, K key);
+	vector<D*> getNodesByKey(Node* root, K key);
 };
+
 
 template<typename K, typename D>
 Node<K,D>* Node<K, D>::newNode(K key, D* data, Node* parent)
@@ -86,8 +88,9 @@ void Node<K, D>::insert(Node** head, K key, D* data)
 }
 
 template<typename K, typename D>
-vector<Node<K, D>*> Node<K,D>::getNodesByKey(Node* root, K key)
+vector<D*> Node<K,D>::getNodesByKey(Node* root, K key)
 {
+	vector<D*> lines;
 	while (root)
 	{
 		if (root->key > key)
@@ -102,12 +105,12 @@ vector<Node<K, D>*> Node<K,D>::getNodesByKey(Node* root, K key)
 		}
 		else
 		{
-			vector<Node*> lines = root->samekeydata;
-			lines.push_back(root);
+			lines = root->samekeydata;
+			lines.push_back(root->data);
 			return lines;
 		}
 	}
-	return NULL;
+	return lines;
 }
 
 
@@ -133,7 +136,7 @@ Node<wstring, PhoneBookLine>* LastnameIndex = NULL;
 Node<wstring, PhoneBookLine>* PhonenumberIndex = NULL;
 
 
-extern __declspec(dllexport) vector<PhoneBookLine*> loadPhonebook(wstring path)
+extern _declspec(dllexport) vector<PhoneBookLine*> loadPhonebook(wstring path)
 {
 	wifstream in(path);
 	vector<wstring> substrings;
@@ -179,24 +182,54 @@ extern __declspec(dllexport) vector<PhoneBookLine*> loadPhonebook(wstring path)
 
 }
 
-enum IndexTypes
+typedef enum IndexTypes
 {
-	STREET_INDEX,
 	LASTNAME_INDEX,
+	STREET_INDEX,
 	PHONENUMBER_INDEX
-};
+} IndexTypes;
 
-template<typename K>
-extern __declspec(dllexport) vector<PhoneBookLine*> searchByIndex(K index, int indextype)
+
+extern _declspec(dllexport) vector<PhoneBookLine*> searchByIndex(wstring index, int indextype)
 {
 	switch (indextype)
 	{
-	case IndexTypes.STREET_INDEX:
+	case STREET_INDEX:
 		return StreetIndex->getNodesByKey(StreetIndex, index);
-	case IndexTypes.LASTNAME_INDEX:
+	case LASTNAME_INDEX:
 		return LastnameIndex->getNodesByKey(LastnameIndex, index);
-	case IndexTypes.PHONENUMBER_INDEX:
+	case PHONENUMBER_INDEX:
 		return PhonenumberIndex->getNodesByKey(PhonenumberIndex, index);
 	}
 }
 
+void destroy(Node<wstring, PhoneBookLine>* node, bool isFirst=false)
+{
+	if (node != NULL)
+	{
+		if (node->left != NULL)
+		{
+			destroy(node->left);
+		}
+		if (node->right != NULL)
+		{
+			destroy(node->right);
+		}
+		if (isFirst && node->data!=NULL)
+		{
+			free(node->data);
+			node->data = NULL;
+		}
+		free(node);
+		node = NULL;
+	}
+	return;
+}
+
+extern _declspec(dllexport) void destroyPhoneBook()
+{
+	destroy(StreetIndex, true);
+	destroy(LastnameIndex);
+	destroy(PhonenumberIndex);
+	return;
+}

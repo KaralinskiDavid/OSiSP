@@ -14,23 +14,28 @@
 
 #define MAX_LOADSTRING 100
 #define loadPhoneBook "?loadPhonebook@@YA?AV?$vector@PAVPhoneBookLine@@V?$allocator@PAVPhoneBookLine@@@std@@@std@@V?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@2@@Z"
+#define searchByindex "?searchByIndex@@YA?AV?$vector@PAVPhoneBookLine@@V?$allocator@PAVPhoneBookLine@@@std@@@std@@V?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@2@H@Z"
+#define destroy "?destroyPhoneBook@@YAXXZ"
 
-// Глобальные переменные:
-HINSTANCE hInst;                                // текущий экземпляр
-WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
-WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
+HINSTANCE hInst;                                
+WCHAR szTitle[MAX_LOADSTRING];                  
+WCHAR szWindowClass[MAX_LOADSTRING];            
 HWND hMainWindow;
+HWND hText;
+std::wstring ListItem = L"Lastname";
 const std::vector<std::wstring> columnsName{ L"Phonenumber", L"Lastname", L"Name", L"Surname", L"Street", L"House", L"Corpus", L"Flat" };
+std::vector<PhoneBookLine*> PhoneBook;
 
 
 HMODULE hLib = LoadLibrary(L"PhoneBook.dll");
 typedef std::vector<PhoneBookLine*>(*PhL)(std::wstring);
 typedef std::vector<PhoneBookLine*>(*Srch)(std::wstring, int);
+typedef void (*Dstr)();
+Dstr destroyPhonebook = (Dstr)GetProcAddress(hLib, destroy);
 PhL loadDatabase = (PhL)GetProcAddress(hLib, loadPhoneBook);
-Srch searchByIndex = (Srch)GetProcAddress(hLib, "");
+Srch searchByIndex = (Srch)GetProcAddress(hLib, searchByindex);
 
 
-// Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -44,14 +49,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Разместите код здесь.
-
-    // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_PHONEBOOKUI, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    // Выполнить инициализацию приложения:
     if (!InitInstance (hInstance, nCmdShow))
     {
         return FALSE;
@@ -61,7 +62,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-    // Цикл основного сообщения:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -84,8 +84,69 @@ HWND CreateListView(HWND hWndParent)
     InitCommonControlsEx(&icex);
     GetClientRect(hWndParent, &rcClient);
 
-    hWndListView = CreateWindowEx(NULL, WC_LISTVIEW, L"", WS_CHILD | LVS_REPORT | LVS_EDITLABELS, 0, 0, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, hWndParent, (HMENU)1, GetModuleHandle(NULL), NULL);
+    hWndListView = CreateWindowEx(NULL, WC_LISTVIEW, L"", WS_CHILD | LVS_REPORT | LVS_EDITLABELS, 0, 40, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, hWndParent, (HMENU)11111, GetModuleHandle(NULL), NULL);
     return hWndListView;
+}
+
+void CreateComboBox(HWND hWndParent)
+{
+    HWND hWndComboBox = CreateWindow(
+        WC_COMBOBOX, TEXT(""),
+        CBS_DROPDOWN | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
+        5, 10, 250, 200,
+        hWndParent,
+        NULL,
+        GetModuleHandle(NULL),
+        NULL);
+    ShowWindow(hWndComboBox, SW_SHOWDEFAULT);
+
+    SendMessage(hWndComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)(L"Lastname"));
+    SendMessage(hWndComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)(L"Street"));
+    SendMessage(hWndComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)(L"Phone Number"));
+    SendMessage(hWndComboBox, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+}
+
+HWND CreateTextBox(HWND hWndParent)
+{
+    HWND hText = CreateWindow(
+        WC_EDIT,
+        NULL,
+        WS_BORDER | WS_CHILD | WS_VISIBLE | NULL | NULL,
+        290, 10, 200, 25,
+        hWndParent,
+        NULL,
+        NULL,
+        0);
+    ShowWindow(hText, SW_SHOWDEFAULT);
+    return hText;
+}
+
+void CreateSearchButton(HWND hWndParent)
+{
+    HWND hwndButton = CreateWindow(
+        WC_BUTTON,
+        L"Find",
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+        530, 10, 100, 25,
+        hWndParent,
+        (HMENU)11111,
+        (HINSTANCE)GetWindowLongPtr(hWndParent, GWLP_HINSTANCE),
+        NULL);
+    ShowWindow(hwndButton, SW_SHOWDEFAULT);
+}
+
+void CreateShowAllButton(HWND hWndParent)
+{
+    HWND hwndButton = CreateWindow(
+        WC_BUTTON,
+        L"Show all",
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+        630, 10, 100, 25,
+        hWndParent,
+        (HMENU)11112,
+        (HINSTANCE)GetWindowLongPtr(hWndParent, GWLP_HINSTANCE),
+        NULL);
+    ShowWindow(hwndButton, SW_SHOWDEFAULT);
 }
 
 void CreateColumns(HWND hWndListView)
@@ -141,11 +202,7 @@ void FillListView(HWND hWndListView, std::vector<PhoneBookLine*> lines)
     }
 }
 
-//
-//  ФУНКЦИЯ: MyRegisterClass()
-//
-//  ЦЕЛЬ: Регистрирует класс окна.
-//
+
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -167,19 +224,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
-//   ФУНКЦИЯ: InitInstance(HINSTANCE, int)
-//
-//   ЦЕЛЬ: Сохраняет маркер экземпляра и создает главное окно
-//
-//   КОММЕНТАРИИ:
-//
-//        В этой функции маркер экземпляра сохраняется в глобальной переменной, а также
-//        создается и выводится главное окно программы.
-//
+
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
+   hInst = hInstance; 
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
@@ -198,16 +246,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 HWND hWndListView;
 
-//
-//  ФУНКЦИЯ: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  ЦЕЛЬ: Обрабатывает сообщения в главном окне.
-//
-//  WM_COMMAND  - обработать меню приложения
-//  WM_PAINT    - Отрисовка главного окна
-//  WM_DESTROY  - отправить сообщение о выходе и вернуться
-//
-//
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -216,44 +254,61 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         hWndListView = CreateListView(hWnd);
         CreateColumns(hWndListView);
-        FillListView(hWndListView, loadDatabase(L"D:\\Work\\PhoneBook\\Debug\\T2.txt"));
+        PhoneBook = loadDatabase(L"D:\\Work\\PhoneBook\\Debug\\T2.txt");
+        FillListView(hWndListView, PhoneBook);
         ShowWindow(hWndListView, SW_SHOWDEFAULT);
+        CreateComboBox(hWnd);
+
+        hText = CreateTextBox(hWnd);
+        CreateSearchButton(hWnd);
+        CreateShowAllButton(hWnd);
     }
     case WM_COMMAND:
+        if (HIWORD(wParam) == CBN_SELCHANGE)
         {
-            int wmId = LOWORD(wParam);
-            // Разобрать выбор в меню:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+            int ItemIndex = SendMessage((HWND)lParam, (UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+            SendMessage((HWND)lParam, (UINT)CB_GETLBTEXT, (WPARAM)ItemIndex, (LPARAM)ListItem.c_str());
+        }
+        if (LOWORD(wParam) == 11111)
+        {
+            TCHAR buff[1024];
+            GetWindowText(hText, buff, 1024);
+            ListView_DeleteAllItems(hWndListView);
+            std::vector<PhoneBookLine*> lines;
+            if (lstrcmpW(ListItem.c_str(), L"Phone Number") == 0)
+                lines = searchByIndex(buff, 2);
+            if (lstrcmpW(ListItem.c_str(), L"Street") == 0)
+                lines = searchByIndex(buff, 1);
+            if (lstrcmpW(ListItem.c_str(), L"Lastname") == 0)
+                lines = searchByIndex(buff, 0);
+            FillListView(hWndListView, std::vector<PhoneBookLine*>{lines});
+            UpdateWindow(hWndListView);
+        }
+        if (LOWORD(wParam) == 11112)
+        {
+            FillListView(hWndListView, PhoneBook);
+            UpdateWindow(hWndListView);
         }
         break;
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
             EndPaint(hWnd, &ps);
         }
         break;
     case WM_DESTROY:
+    {
+        destroyPhonebook();
         PostQuitMessage(0);
         break;
+    }
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
 }
 
-// Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
